@@ -160,6 +160,28 @@
       100% { transform: translateY(-115vh) translateX(0);    opacity: 0; }
     }
 
+    /* ── Audio unlock overlay ── */
+    #audio-unlock {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      color: rgba(255,255,255,0.85);
+      font-size: 18px;
+      letter-spacing: 0.08em;
+      padding: 16px 32px;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.5s;
+    }
+    #audio-unlock.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     /* ── Celebration message ── */
     #celebration {
       display: none;
@@ -176,6 +198,8 @@
   </style>
 </head>
 <body>
+
+  <button id="audio-unlock">&#9654; Zapnout zvuk</button>
 
   <canvas id="stars"></canvas>
   <canvas id="fireworks"></canvas>
@@ -456,6 +480,24 @@
       }
 
       tick();
+    })();
+
+    /* ════════════════════════════════════════
+       AUDIO UNLOCK (required by browsers)
+    ════════════════════════════════════════ */
+    (function () {
+      const btn = document.getElementById('audio-unlock');
+      btn.addEventListener('click', () => {
+        // Play a silent buffer to unlock audio context
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const buf = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
+        ctx.resume();
+        btn.classList.add('hidden');
+      });
     })();
 
     /* ════════════════════════════════════════
