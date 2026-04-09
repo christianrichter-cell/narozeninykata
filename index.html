@@ -120,27 +120,6 @@
       margin-bottom: 26px;
     }
 
-    /* ── Test audio button ── */
-    #test-btn {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 10;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 12px;
-      color: rgba(255,255,255,0.75);
-      font-size: 18px;
-      letter-spacing: 0.1em;
-      padding: 16px 28px;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-    #test-btn:hover {
-      background: rgba(255,255,255,0.22);
-      color: #fff;
-    }
-
     /* ── Celebration message ── */
     #celebration {
       display: none;
@@ -157,8 +136,6 @@
   </style>
 </head>
 <body>
-
-  <button id="test-btn" onclick="new Audio('Audio/test.mp3').play()">&#9654; test</button>
 
   <canvas id="stars"></canvas>
   <canvas id="fireworks"></canvas>
