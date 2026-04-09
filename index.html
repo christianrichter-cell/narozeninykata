@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Káťa má narozeniny!</title>
+  <link rel="preload" href="Audio/celebration.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/5.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/6.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/7.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/8.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/9.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/10.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/11.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/12.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/13.mp3" as="audio" type="audio/mpeg">
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -302,7 +312,7 @@
           this.alpha -= this.decay;
         }
         draw(ctx) {
-          // trail
+          ctx.save();
           for (let i = 0; i < this.trail.length; i++) {
             const a = (i / this.trail.length) * this.alpha * 0.4;
             ctx.beginPath();
@@ -316,7 +326,7 @@
           ctx.fillStyle = this.color;
           ctx.globalAlpha = Math.max(0, this.alpha);
           ctx.fill();
-          ctx.globalAlpha = 1;
+          ctx.restore();
         }
       }
 
@@ -359,6 +369,7 @@
           }
         }
         draw(ctx) {
+          ctx.save();
           for (let i = 0; i < this.trail.length; i++) {
             const a = (i / this.trail.length) * 0.8;
             ctx.beginPath();
@@ -372,30 +383,26 @@
           ctx.fillStyle = '#ffffff';
           ctx.globalAlpha = 1;
           ctx.fill();
-          ctx.globalAlpha = 1;
+          ctx.restore();
         }
       }
 
       /* ── State ── */
-      let rockets    = [];
-      let particles  = [];
-      let lastLaunch = 0;
-
-      /* Stagger launch interval: 4000–8000 ms */
-      function launchInterval() {
-        return Math.random() * 4000 + 4000;
-      }
+      let rockets      = [];
+      let particles    = [];
+      let lastLaunch   = 0;
+      let nextInterval = Math.random() * 4000 + 4000;
 
       function loop(ts) {
         // Clear fully so stars canvas beneath shows through
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Launch new rocket
-        if (ts - lastLaunch > launchInterval()) {
+        // Launch new rocket on a fixed pre-computed interval
+        if (ts - lastLaunch > nextInterval) {
           rockets.push(new Rocket());
-          // occasionally launch two at once
           if (Math.random() < 0.05) rockets.push(new Rocket());
-          lastLaunch = ts;
+          lastLaunch   = ts;
+          nextInterval = Math.random() * 4000 + 4000; // compute next interval once
         }
 
         // Update & draw rockets
@@ -438,8 +445,9 @@
         const diff = TARGET - Date.now();
 
         if (diff <= 0) {
-          elCountdown.style.display   = 'none';
-          elCelebration.style.display = 'block';
+          elCountdown.style.display              = 'none';
+          document.getElementById('subheading').style.display = 'none';
+          elCelebration.style.display            = 'block';
           return;
         }
 
@@ -534,9 +542,8 @@
         const hoursLeft = Math.floor(totalSec / 3600);
         const remainder = totalSec % 3600;
 
-        // Fire 5 seconds before the next whole hour drop
-        // remainder counts down: …7, 6, 5, 4, 3… so trigger at ≤5 once per hour
-        if (remainder <= 5 && lastTriggeredHour !== hoursLeft) {
+        // Fire up to 6 seconds before the next whole hour drop (wider window = safer on slow TVs)
+        if (remainder <= 6 && lastTriggeredHour !== hoursLeft) {
           lastTriggeredHour = hoursLeft;
           startBalloonWindow();
           playSequence(hoursLeft);
