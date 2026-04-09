@@ -459,39 +459,64 @@
     })();
 
     /* ════════════════════════════════════════
-       HOURLY AUDIO ANNOUNCEMENT
+       HOURLY AUDIO ANNOUNCEMENT + BALLOONS
     ════════════════════════════════════════ */
     (function () {
-      const TARGET = new Date('2026-04-10T00:00:00');
+      const TARGET    = new Date('2026-04-10T00:00:00');
       const AVAILABLE = [5, 6, 7, 8, 9, 10, 11, 12, 13];
-      let lastAnnouncedHour = null;
 
       const BALLOON_COLORS = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff9ff3'];
 
-      function launchBalloons() {
-        const count = Math.floor(Math.random() * 3) + 3; // 3–5
-        for (let i = 0; i < count; i++) {
+      let lastTriggeredHour = null;  // which hour we already fired for
+      let balloonTimer      = null;  // repeating interval while window is open
+      let balloonWindowEnd  = 0;     // timestamp when balloons should stop
+
+      /* ── Launch a single balloon ── */
+      function spawnBalloon() {
+        const b     = document.createElement('div');
+        b.className = 'balloon';
+        const color = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
+        const dur   = (Math.random() * 3 + 5).toFixed(1) + 's';
+        const sway  = (Math.random() * 80 - 40).toFixed(0) + 'px';
+        const left  = (Math.random() * 80 + 10).toFixed(0) + '%';
+        b.style.cssText = `--color:${color};--dur:${dur};--sway:${sway};left:${left};background:${color};`;
+        document.body.appendChild(b);
+        b.addEventListener('animationend', () => b.remove());
+      }
+
+      /* ── Open a 25-second balloon window (5s before + 20s after the hour) ── */
+      function startBalloonWindow() {
+        if (balloonTimer) clearInterval(balloonTimer);
+        balloonWindowEnd = Date.now() + 25000;
+
+        // Initial burst of 3 balloons right away
+        spawnBalloon(); spawnBalloon(); spawnBalloon();
+
+        // Then keep spawning one every ~1.5 s until window closes
+        balloonTimer = setInterval(() => {
+          if (Date.now() >= balloonWindowEnd) {
+            clearInterval(balloonTimer);
+            balloonTimer = null;
+            return;
+          }
+          spawnBalloon();
+        }, 1500);
+      }
+
+      /* ── Play celebration then (after it ends + 3 s) play the hour MP3 ── */
+      function playSequence(hoursLeft) {
+        const cel = new Audio('Audio/celebration.mp3');
+        cel.play().catch(() => {});
+        cel.addEventListener('ended', () => {
           setTimeout(() => {
-            const b = document.createElement('div');
-            b.className = 'balloon';
-            const color = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
-            const dur   = (Math.random() * 3 + 5).toFixed(1) + 's';
-            const sway  = (Math.random() * 80 - 40).toFixed(0) + 'px';
-            const left  = (Math.random() * 80 + 10).toFixed(0) + '%';
-            b.style.cssText = `--color:${color}; --dur:${dur}; --sway:${sway}; left:${left}; background:${color};`;
-            document.body.appendChild(b);
-            b.addEventListener('animationend', () => b.remove());
-          }, i * 400);
-        }
+            if (AVAILABLE.includes(hoursLeft)) {
+              new Audio(`Audio/${hoursLeft}.mp3`).play().catch(() => {});
+            }
+          }, 3000);
+        });
       }
 
-      function announce(hoursLeft) {
-        launchBalloons();
-        if (!AVAILABLE.includes(hoursLeft)) return;
-        const audio = new Audio(`Audio/${hoursLeft}.mp3`);
-        audio.play().catch(() => {});
-      }
-
+      /* ── Main check — runs every second ── */
       function checkHour() {
         const diff = TARGET - Date.now();
         if (diff <= 0) return;
@@ -500,10 +525,12 @@
         const hoursLeft = Math.floor(totalSec / 3600);
         const remainder = totalSec % 3600;
 
-        // Trigger within the first 5 seconds of a new whole hour
-        if (remainder < 5 && hoursLeft !== lastAnnouncedHour) {
-          lastAnnouncedHour = hoursLeft;
-          announce(hoursLeft);
+        // Fire 5 seconds before the next whole hour drop
+        // remainder counts down: …7, 6, 5, 4, 3… so trigger at ≤5 once per hour
+        if (remainder <= 5 && lastTriggeredHour !== hoursLeft) {
+          lastTriggeredHour = hoursLeft;
+          startBalloonWindow();
+          playSequence(hoursLeft);
         }
       }
 
