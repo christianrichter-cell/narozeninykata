@@ -311,7 +311,7 @@
           }
         }
         explode(particles) {
-          const count = Math.floor(Math.random() * 20) + 30;
+          const count = Math.floor(Math.random() * 10) + 15;
           // mix of same color + white sparkles
           for (let i = 0; i < count; i++) {
             const c = Math.random() < 0.2 ? '#ffffff' : this.color;
@@ -341,9 +341,9 @@
       let particles  = [];
       let lastLaunch = 0;
 
-      /* Stagger launch interval: 2000–4000 ms */
+      /* Stagger launch interval: 4000–8000 ms */
       function launchInterval() {
-        return Math.random() * 2000 + 2000;
+        return Math.random() * 4000 + 4000;
       }
 
       function loop(ts) {
@@ -354,7 +354,7 @@
         if (ts - lastLaunch > launchInterval()) {
           rockets.push(new Rocket());
           // occasionally launch two at once
-          if (Math.random() < 0.1) rockets.push(new Rocket());
+          if (Math.random() < 0.05) rockets.push(new Rocket());
           lastLaunch = ts;
         }
 
