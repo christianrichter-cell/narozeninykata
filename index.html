@@ -417,6 +417,46 @@
 
       tick();
     })();
+
+    /* ════════════════════════════════════════
+       HOURLY VOICE ANNOUNCEMENT
+    ════════════════════════════════════════ */
+    (function () {
+      const TARGET = new Date('2026-04-10T00:00:00');
+      let lastAnnouncedHour = null;
+
+      function announce(hoursLeft) {
+        if (!window.speechSynthesis) return;
+        const text = hoursLeft === 1
+          ? "Only 1 hour remains till Kata's birthday!"
+          : `Only ${hoursLeft} hours remain till Kata's birthday!`;
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = 'en-GB';
+        utt.rate = 0.95;
+        utt.pitch = 1;
+        window.speechSynthesis.speak(utt);
+      }
+
+      function checkHour() {
+        const diff = TARGET - Date.now();
+        if (diff <= 0) return;
+
+        const totalSec  = Math.floor(diff / 1000);
+        const hoursLeft = Math.floor(totalSec / 3600);
+        const remainder = totalSec % 3600; // seconds past the last whole hour
+
+        // Trigger within the first 5 seconds of a new whole hour
+        if (remainder < 5 && hoursLeft !== lastAnnouncedHour) {
+          lastAnnouncedHour = hoursLeft;
+          announce(hoursLeft);
+        }
+      }
+
+      // Check every second (piggybacks on the same cadence as the countdown)
+      setInterval(checkHour, 1000);
+      // Also fire once on load so we don't wait an hour for the first check
+      checkHour();
+    })();
   </script>
 </body>
 </html>
