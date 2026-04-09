@@ -160,28 +160,6 @@
       100% { transform: translateY(-115vh) translateX(0);    opacity: 0; }
     }
 
-    /* ── Audio unlock overlay ── */
-    #audio-unlock {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 20;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 12px;
-      color: rgba(255,255,255,0.85);
-      font-size: 18px;
-      letter-spacing: 0.08em;
-      padding: 16px 32px;
-      cursor: pointer;
-      transition: background 0.2s, opacity 0.5s;
-    }
-    #audio-unlock.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
     /* ── Celebration message ── */
     #celebration {
       display: none;
@@ -198,8 +176,6 @@
   </style>
 </head>
 <body>
-
-  <button id="audio-unlock">&#9654; Zapnout zvuk</button>
 
   <canvas id="stars"></canvas>
   <canvas id="fireworks"></canvas>
@@ -483,24 +459,6 @@
     })();
 
     /* ════════════════════════════════════════
-       AUDIO UNLOCK (required by browsers)
-    ════════════════════════════════════════ */
-    (function () {
-      const btn = document.getElementById('audio-unlock');
-      btn.addEventListener('click', () => {
-        // Play a silent buffer to unlock audio context
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const buf = ctx.createBuffer(1, 1, 22050);
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(ctx.destination);
-        src.start(0);
-        ctx.resume();
-        btn.classList.add('hidden');
-      });
-    })();
-
-    /* ════════════════════════════════════════
        HOURLY AUDIO ANNOUNCEMENT + BALLOONS
     ════════════════════════════════════════ */
     (function () {
@@ -545,17 +503,26 @@
         }, 1500);
       }
 
-      /* ── Play celebration then (after it ends + 3 s) play the hour MP3 ── */
+      /* ── Play celebration, then after it ends (+ 3 s) play the hour MP3 ── */
       function playSequence(hoursLeft) {
-        const cel = new Audio('Audio/celebration.mp3');
-        cel.play().catch(() => {});
-        cel.addEventListener('ended', () => {
+        if (!AVAILABLE.includes(hoursLeft)) return;
+
+        let hourPlayed = false;
+        function playHourAudio() {
+          if (hourPlayed) return;
+          hourPlayed = true;
           setTimeout(() => {
-            if (AVAILABLE.includes(hoursLeft)) {
-              new Audio(`Audio/${hoursLeft}.mp3`).play().catch(() => {});
-            }
+            new Audio(`Audio/${hoursLeft}.mp3`).play().catch(() => {});
           }, 3000);
-        });
+        }
+
+        const cel = new Audio('Audio/celebration.mp3');
+        cel.addEventListener('ended', playHourAudio);
+        cel.addEventListener('error', playHourAudio); // if celebration fails to load
+        cel.play().catch(playHourAudio);              // if play() itself is rejected
+
+        // Hard fallback: play hour audio after 45 s no matter what
+        setTimeout(playHourAudio, 45000);
       }
 
       /* ── Main check — runs every second ── */
