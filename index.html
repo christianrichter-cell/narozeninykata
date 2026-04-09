@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Káťa má narozeniny!</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      background-color: #0a0a1a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Background canvases ── */
+    #stars, #fireworks {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+    #stars    { z-index: 0; }
+    #fireworks { z-index: 1; }
+
+    /* ── Main content ── */
+    #content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      text-align: center;
+      padding: 32px;
+    }
+
+    #heading {
+      font-size: clamp(22px, 4vw, 38px);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      line-height: 1.25;
+      max-width: 820px;
+      background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff, #ff9ff3, #ff6b6b);
+      background-size: 300% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientFlow 5s linear infinite;
+    }
+
+    #subheading {
+      font-size: clamp(14px, 2vw, 20px);
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-top: -20px;
+    }
+
+    @keyframes gradientFlow {
+      0%   { background-position: 0% center; }
+      100% { background-position: 300% center; }
+    }
+
+    /* ── Countdown tiles ── */
+    #countdown {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 32px 44px;
+      min-width: 140px;
+    }
+
+    .tile-number {
+      font-size: clamp(56px, 10vw, 80px);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
+    .tile-label {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.55;
+    }
+
+    .tile-sep {
+      font-size: 64px;
+      font-weight: 300;
+      opacity: 0.3;
+      line-height: 1;
+      margin-bottom: 26px;
+    }
+
+    /* ── Celebration message ── */
+    #celebration {
+      display: none;
+      font-size: clamp(36px, 7vw, 64px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1);    opacity: 1; }
+      50%       { transform: scale(1.07); opacity: 0.85; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="stars"></canvas>
+  <canvas id="fireworks"></canvas>
+
+  <div id="content">
+    <p id="heading">Káťa bude mít narozeniny!</p>
+    <p id="subheading">UŽ JEN ZA:</p>
+
+    <div id="countdown">
+      <div class="tile">
+        <span class="tile-number" id="hours">00</span>
+        <span class="tile-label">Hodin</span>
+      </div>
+      <span class="tile-sep">:</span>
+      <div class="tile">
+        <span class="tile-number" id="minutes">00</span>
+        <span class="tile-label">Minut</span>
+      </div>
+      <span class="tile-sep">:</span>
+      <div class="tile">
+        <span class="tile-number" id="seconds">00</span>
+        <span class="tile-label">Sekund</span>
+      </div>
+    </div>
+
+    <div id="celebration">🎉 Narozeniny začínají! 🎉</div>
+  </div>
+
+  <script>
+    /* ════════════════════════════════════════
+       STARFIELD
+    ════════════════════════════════════════ */
+    (function () {
+      const canvas = document.getElementById('stars');
+      const ctx = canvas.getContext('2d');
+      const COUNT = 160;
+      let stars = [];
+
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function buildStars() {
+        stars = [];
+        for (let i = 0; i < COUNT; i++) {
+          stars.push({
+            x:      Math.random() * canvas.width,
+            y:      Math.random() * canvas.height,
+            r:      Math.random() * 1.4 + 0.3,
+            minOp:  Math.random() * 0.2 + 0.05,
+            maxOp:  Math.random() * 0.6 + 0.35,
+            dur:    Math.random() * 4000 + 2000,
+            offset: Math.random() * Math.PI * 2,
+          });
+        }
+      }
+
+      function draw(ts) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const s of stars) {
+          const t   = (ts % s.dur) / s.dur;
+          const sin = (Math.sin(t * Math.PI * 2 + s.offset) + 1) / 2;
+          const op  = s.minOp + (s.maxOp - s.minOp) * sin;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${op.toFixed(3)})`;
+          ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', () => { resize(); buildStars(); });
+      resize();
+      buildStars();
+      requestAnimationFrame(draw);
+    })();
+
+    /* ════════════════════════════════════════
+       FIREWORKS
+    ════════════════════════════════════════ */
+    (function () {
+      const canvas = document.getElementById('fireworks');
+      const ctx    = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      /* ── Palette ── */
+      const COLORS = [
+        '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff',
+        '#ff9ff3', '#ff922b', '#a9e34b', '#74c0fc',
+        '#f783ac', '#ffffff', '#ffc9c9', '#b2f2bb',
+      ];
+
+      /* ── Particle ── */
+      class Particle {
+        constructor(x, y, color) {
+          this.x  = x;
+          this.y  = y;
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 5 + 1.5;
+          this.vx   = Math.cos(angle) * speed;
+          this.vy   = Math.sin(angle) * speed;
+          this.color = color;
+          this.alpha = 1;
+          this.decay = Math.random() * 0.018 + 0.010;
+          this.r     = Math.random() * 2.5 + 1;
+          this.gravity = 0.08;
+          // optional: small trail
+          this.trail = [];
+        }
+        update() {
+          this.trail.push({ x: this.x, y: this.y });
+          if (this.trail.length > 5) this.trail.shift();
+          this.vy  += this.gravity;
+          this.vx  *= 0.98;
+          this.x   += this.vx;
+          this.y   += this.vy;
+          this.alpha -= this.decay;
+        }
+        draw(ctx) {
+          // trail
+          for (let i = 0; i < this.trail.length; i++) {
+            const a = (i / this.trail.length) * this.alpha * 0.4;
+            ctx.beginPath();
+            ctx.arc(this.trail[i].x, this.trail[i].y, this.r * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = a;
+            ctx.fill();
+          }
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.globalAlpha = Math.max(0, this.alpha);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      /* ── Rocket ── */
+      class Rocket {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x     = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+          this.y     = canvas.height + 10;
+          this.targetY = Math.random() * canvas.height * 0.5 + canvas.height * 0.05;
+          const speed  = Math.random() * 4 + 6;
+          const dx     = (Math.random() - 0.5) * 3;
+          const dy     = -speed;
+          const len    = Math.sqrt(dx * dx + dy * dy);
+          this.vx    = (dx / len) * speed;
+          this.vy    = (dy / len) * speed;
+          this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+          this.trail = [];
+          this.exploded = false;
+        }
+        update(particles) {
+          this.trail.push({ x: this.x, y: this.y });
+          if (this.trail.length > 12) this.trail.shift();
+          this.x += this.vx;
+          this.y += this.vy;
+          this.vy += 0.05; // slight gravity on ascent
+          if (this.y <= this.targetY || this.vy >= 0) {
+            this.explode(particles);
+            this.exploded = true;
+          }
+        }
+        explode(particles) {
+          const count = Math.floor(Math.random() * 60) + 80;
+          // mix of same color + white sparkles
+          for (let i = 0; i < count; i++) {
+            const c = Math.random() < 0.2 ? '#ffffff' : this.color;
+            particles.push(new Particle(this.x, this.y, c));
+          }
+        }
+        draw(ctx) {
+          for (let i = 0; i < this.trail.length; i++) {
+            const a = (i / this.trail.length) * 0.8;
+            ctx.beginPath();
+            ctx.arc(this.trail[i].x, this.trail[i].y, 2, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = a;
+            ctx.fill();
+          }
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.globalAlpha = 1;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      /* ── State ── */
+      let rockets    = [];
+      let particles  = [];
+      let lastLaunch = 0;
+
+      /* Stagger launch interval: 600–1400 ms */
+      function launchInterval() {
+        return Math.random() * 800 + 600;
+      }
+
+      function loop(ts) {
+        // Clear fully so stars canvas beneath shows through
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Launch new rocket
+        if (ts - lastLaunch > launchInterval()) {
+          rockets.push(new Rocket());
+          // occasionally launch two at once
+          if (Math.random() < 0.3) rockets.push(new Rocket());
+          lastLaunch = ts;
+        }
+
+        // Update & draw rockets
+        rockets = rockets.filter(r => {
+          if (r.exploded) return false;
+          r.update(particles);
+          if (!r.exploded) r.draw(ctx);
+          return !r.exploded;
+        });
+
+        // Update & draw particles
+        particles = particles.filter(p => {
+          p.update();
+          if (p.alpha <= 0) return false;
+          p.draw(ctx);
+          return true;
+        });
+
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    })();
+
+    /* ════════════════════════════════════════
+       COUNTDOWN
+    ════════════════════════════════════════ */
+    (function () {
+      const TARGET = new Date('2026-04-10T00:00:00');
+
+      const elHours       = document.getElementById('hours');
+      const elMinutes     = document.getElementById('minutes');
+      const elSeconds     = document.getElementById('seconds');
+      const elCountdown   = document.getElementById('countdown');
+      const elCelebration = document.getElementById('celebration');
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+
+      function tick() {
+        const diff = TARGET - Date.now();
+
+        if (diff <= 0) {
+          elCountdown.style.display   = 'none';
+          elCelebration.style.display = 'block';
+          return;
+        }
+
+        const totalSec = Math.floor(diff / 1000);
+        const s = totalSec % 60;
+        const m = Math.floor(totalSec / 60) % 60;
+        const h = Math.floor(totalSec / 3600);
+
+        elHours.textContent   = pad(h);
+        elMinutes.textContent = pad(m);
+        elSeconds.textContent = pad(s);
+
+        setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+      }
+
+      tick();
+    })();
+  </script>
+</body>
+</html>
