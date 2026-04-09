@@ -120,6 +120,46 @@
       margin-bottom: 26px;
     }
 
+    /* ── Balloons ── */
+    .balloon {
+      position: fixed;
+      bottom: -140px;
+      width: 70px;
+      height: 88px;
+      border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+      z-index: 5;
+      pointer-events: none;
+      animation: floatUp var(--dur) ease-in forwards;
+    }
+    .balloon::before {
+      content: '';
+      position: absolute;
+      bottom: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 14px solid var(--color);
+    }
+    .balloon::after {
+      content: '';
+      position: absolute;
+      bottom: -70px;
+      left: calc(50% - 0.5px);
+      width: 1px;
+      height: 56px;
+      background: rgba(255,255,255,0.35);
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(0)      translateX(0);    opacity: 1; }
+      40%  { opacity: 1; }
+      70%  { transform: translateY(-80vh)  translateX(var(--sway)); }
+      100% { transform: translateY(-115vh) translateX(0);    opacity: 0; }
+    }
+
     /* ── Celebration message ── */
     #celebration {
       display: none;
@@ -426,10 +466,30 @@
       const AVAILABLE = [5, 6, 7, 8, 9, 10, 11, 12, 13];
       let lastAnnouncedHour = null;
 
+      const BALLOON_COLORS = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff9ff3'];
+
+      function launchBalloons() {
+        const count = Math.floor(Math.random() * 3) + 3; // 3–5
+        for (let i = 0; i < count; i++) {
+          setTimeout(() => {
+            const b = document.createElement('div');
+            b.className = 'balloon';
+            const color = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
+            const dur   = (Math.random() * 3 + 5).toFixed(1) + 's';
+            const sway  = (Math.random() * 80 - 40).toFixed(0) + 'px';
+            const left  = (Math.random() * 80 + 10).toFixed(0) + '%';
+            b.style.cssText = `--color:${color}; --dur:${dur}; --sway:${sway}; left:${left}; background:${color};`;
+            document.body.appendChild(b);
+            b.addEventListener('animationend', () => b.remove());
+          }, i * 400);
+        }
+      }
+
       function announce(hoursLeft) {
+        launchBalloons();
         if (!AVAILABLE.includes(hoursLeft)) return;
         const audio = new Audio(`Audio/${hoursLeft}.mp3`);
-        audio.play().catch(() => {}); // silently ignore if blocked
+        audio.play().catch(() => {});
       }
 
       function checkHour() {
