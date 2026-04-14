@@ -695,10 +695,11 @@
        PEOPLE HELPERS
     ════════════════════════════════════════ */
     function nextBirthdayDate(day, month) {
-      const now = new Date();
-      const yr  = now.getFullYear();
-      let d = new Date(yr, month - 1, day, 0, 0, 0);
-      if (d <= now) d = new Date(yr + 1, month - 1, day, 0, 0, 0);
+      const now   = new Date();
+      const yr    = now.getFullYear();
+      const today = new Date(yr, now.getMonth(), now.getDate()); // midnight today, no time
+      let d = new Date(yr, month - 1, day);
+      if (d < today) d = new Date(yr + 1, month - 1, day);
       return d;
     }
 
@@ -731,7 +732,7 @@
         el.className = 'strip-item' + (i === 0 ? ' next' : '');
         el.dataset.personName = p.name;
         el.addEventListener('click', () => openPopup(p));
-        const dateStr = `${p.day}.${String(p.month).padStart(2, '0')}.`;
+        const dateStr = `${String(p.day).padStart(2, '0')}.${String(p.month).padStart(2, '0')}.`;
         const avatarInner = p.photo
           ? `<img src="${p.photo}" alt="${p.name}">`
           : initials(p.name);
@@ -932,6 +933,12 @@
       document.getElementById('popup-days').textContent =
         daysLabel(target).toUpperCase();
 
+      // Re-trigger popIn animation on every open
+      const card = document.getElementById('popup-card');
+      card.style.animation = 'none';
+      card.offsetHeight; // force reflow
+      card.style.animation = '';
+
       document.getElementById('popup-overlay').classList.add('visible');
     }
 
@@ -939,11 +946,12 @@
       document.getElementById('popup-overlay').classList.remove('visible');
     }
 
-    // Close on overlay click (but not card click)
+    // Close on overlay click (but not card click), or Escape key
     document.getElementById('popup-overlay').addEventListener('click', e => {
       if (e.target === document.getElementById('popup-overlay')) closePopup();
     });
     document.getElementById('popup-close').addEventListener('click', closePopup);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
 
     /* ════════════════════════════════════════
        INIT
