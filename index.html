@@ -172,6 +172,15 @@
       animation: pulse 1.4s ease-in-out infinite;
     }
 
+    #birthday-date {
+      font-size: clamp(13px, 1.8vw, 18px);
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      opacity: 0.5;
+      margin-top: -20px;
+      text-transform: uppercase;
+    }
+
     @keyframes pulse {
       0%, 100% { transform: scale(1);    opacity: 1; }
       50%       { transform: scale(1.07); opacity: 0.85; }
@@ -282,6 +291,7 @@
       </div>
     </div>
 
+    <p id="birthday-date"></p>
     <div id="celebration"></div>
   </div>
 
@@ -556,9 +566,15 @@
         `${person.name} slaví ${age}. narozeniny!`;
       document.title = `${person.name} má narozeniny!`;
 
-      document.getElementById('countdown').style.display  = '';
-      document.getElementById('subheading').style.display = '';
-      document.getElementById('celebration').style.display = 'none';
+      const MONTHS = ['ledna','února','března','dubna','května','června',
+                       'července','srpna','září','října','listopadu','prosince'];
+      document.getElementById('birthday-date').textContent =
+        `${person.day}. ${MONTHS[person.month - 1]} ${person.target.getFullYear()}`;
+
+      document.getElementById('countdown').style.display   = '';
+      document.getElementById('subheading').style.display  = '';
+      document.getElementById('birthday-date').style.display = '';
+      document.getElementById('celebration').style.display  = 'none';
     }
 
     /* ════════════════════════════════════════
@@ -588,8 +604,9 @@
        CELEBRATION + AUTO-ADVANCE
     ════════════════════════════════════════ */
     function triggerCelebration() {
-      document.getElementById('countdown').style.display  = 'none';
-      document.getElementById('subheading').style.display = 'none';
+      document.getElementById('countdown').style.display      = 'none';
+      document.getElementById('subheading').style.display     = 'none';
+      document.getElementById('birthday-date').style.display  = 'none';
       const cel = document.getElementById('celebration');
       cel.textContent    = `🎉 ${currentPerson.name} slaví narozeniny! 🎉`;
       cel.style.display  = 'block';
