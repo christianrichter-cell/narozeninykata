@@ -73,6 +73,15 @@
       margin-top: -20px;
     }
 
+    #hint {
+      font-size: clamp(12px, 1.5vw, 16px);
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      font-style: italic;
+      opacity: 0.4;
+      margin-top: -20px;
+    }
+
     @keyframes gradientFlow {
       0%   { background-position: 0% center; }
       100% { background-position: 300% center; }
@@ -184,8 +193,14 @@
   <div id="content">
     <p id="heading">Káťa bude mít narozeniny!</p>
     <p id="subheading">UŽ JEN ZA:</p>
+    <p id="hint">...kdybyste to náhodou nevěděli...</p>
 
     <div id="countdown">
+      <div class="tile">
+        <span class="tile-number" id="days">00</span>
+        <span class="tile-label">Dní</span>
+      </div>
+      <span class="tile-sep">:</span>
       <div class="tile">
         <span class="tile-number" id="hours">00</span>
         <span class="tile-label">Hodin</span>
@@ -457,6 +472,7 @@
     (function () {
       const TARGET = new Date('2027-04-10T00:00:00');
 
+      const elDays        = document.getElementById('days');
       const elHours       = document.getElementById('hours');
       const elMinutes     = document.getElementById('minutes');
       const elSeconds     = document.getElementById('seconds');
@@ -471,6 +487,7 @@
         if (diff <= 0) {
           elCountdown.style.display = 'none';
           document.getElementById('subheading').style.display = 'none';
+          document.getElementById('hint').style.display = 'none';
           elCelebration.style.display = 'block';
           new Audio('Audio/celebration.mp3').play().catch(() => {});
           startBalloonWindow();
@@ -480,8 +497,10 @@
         const totalSec = Math.floor(diff / 1000);
         const s = totalSec % 60;
         const m = Math.floor(totalSec / 60) % 60;
-        const h = Math.floor(totalSec / 3600);
+        const h = Math.floor(totalSec / 3600) % 24;
+        const d = Math.floor(totalSec / 86400);
 
+        elDays.textContent    = pad(d);
         elHours.textContent   = pad(h);
         elMinutes.textContent = pad(m);
         elSeconds.textContent = pad(s);
