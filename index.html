@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Káťa má narozeniny!</title>
   <link rel="preload" href="Audio/celebration.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/5.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/6.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/7.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/8.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/9.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/10.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/11.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/12.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/13.mp3" as="audio" type="audio/mpeg">
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -70,15 +79,6 @@
       letter-spacing: 0.2em;
       text-transform: uppercase;
       opacity: 0.6;
-      margin-top: -20px;
-    }
-
-    #hint {
-      font-size: clamp(12px, 1.5vw, 16px);
-      font-weight: 300;
-      letter-spacing: 0.08em;
-      font-style: italic;
-      opacity: 0.4;
       margin-top: -20px;
     }
 
@@ -192,7 +192,6 @@
 
   <div id="content">
     <p id="heading">Káťa bude mít narozeniny!</p>
-    <p id="hint">...kdybyste to náhodou nevěděli...</p>
     <p id="subheading">UŽ JEN ZA:</p>
 
     <div id="countdown">
@@ -221,6 +220,9 @@
   </div>
 
   <script>
+    /* Shared flag — set true when < 24 h remain */
+    let isLastDay = false;
+
     /* ════════════════════════════════════════
        STARFIELD
     ════════════════════════════════════════ */
@@ -403,12 +405,12 @@
         // Clear fully so stars canvas beneath shows through
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Launch new rocket on a fixed pre-computed interval
-        if (ts - lastLaunch > nextInterval) {
+        // Only launch rockets in the last 24 hours
+        if (isLastDay && ts - lastLaunch > nextInterval) {
           rockets.push(new Rocket());
           if (Math.random() < 0.05) rockets.push(new Rocket());
           lastLaunch   = ts;
-          nextInterval = Math.random() * 4000 + 4000; // compute next interval once
+          nextInterval = Math.random() * 4000 + 4000;
         }
 
         // Update & draw rockets
@@ -487,7 +489,6 @@
         if (diff <= 0) {
           elCountdown.style.display = 'none';
           document.getElementById('subheading').style.display = 'none';
-          document.getElementById('hint').style.display = 'none';
           elCelebration.style.display = 'block';
           new Audio('Audio/celebration.mp3').play().catch(() => {});
           startBalloonWindow();
@@ -495,6 +496,10 @@
         }
 
         const totalSec = Math.floor(diff / 1000);
+
+        // Enable fireworks and hourly announcements in the last 24 hours
+        isLastDay = totalSec <= 86400;
+
         const s = totalSec % 60;
         const m = Math.floor(totalSec / 60) % 60;
         const h = Math.floor(totalSec / 3600) % 24;
@@ -509,6 +514,51 @@
       }
 
       tick();
+    })();
+
+    /* ════════════════════════════════════════
+       HOURLY ANNOUNCEMENT (last 24 h only)
+    ════════════════════════════════════════ */
+    (function () {
+      const TARGET    = new Date('2027-04-10T00:00:00');
+      const AVAILABLE = [5, 6, 7, 8, 9, 10, 11, 12, 13];
+      let lastTriggeredHour = null;
+
+      function playSequence(hoursLeft) {
+        let hourPlayed = false;
+        function playHourAudio() {
+          if (hourPlayed) return;
+          hourPlayed = true;
+          setTimeout(() => {
+            if (AVAILABLE.includes(hoursLeft)) {
+              new Audio(`Audio/${hoursLeft}.mp3`).play().catch(() => {});
+            }
+          }, 3000);
+        }
+        const cel = new Audio('Audio/celebration.mp3');
+        cel.addEventListener('ended', playHourAudio);
+        cel.addEventListener('error', playHourAudio);
+        cel.play().catch(playHourAudio);
+        setTimeout(playHourAudio, 45000); // hard fallback
+      }
+
+      function checkHour() {
+        const diff = TARGET - Date.now();
+        if (diff <= 0 || !isLastDay) return;
+
+        const totalSec  = Math.floor(diff / 1000);
+        const hoursLeft = Math.floor(totalSec / 3600);
+        const remainder = totalSec % 3600;
+
+        if (remainder <= 6 && lastTriggeredHour !== hoursLeft) {
+          lastTriggeredHour = hoursLeft;
+          startBalloonWindow();
+          playSequence(hoursLeft);
+        }
+      }
+
+      setInterval(checkHour, 1000);
+      checkHour();
     })();
 
   </script>
