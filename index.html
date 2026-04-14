@@ -292,9 +292,10 @@
     .spark {
       position: fixed;
       bottom: 0;
-      border-radius: 50%;
+      border-radius: 30% 30% 50% 50%;
       z-index: 4;
       pointer-events: none;
+      transform-origin: center bottom;
       animation: sparkRise var(--dur) ease-out forwards;
     }
 
@@ -867,12 +868,14 @@
       const s     = document.createElement('div');
       s.className = 'spark';
       const color = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)];
-      const size  = (Math.random() * 3 + 1.5).toFixed(1) + 'px';
+      const w     = (Math.random() * 2.5 + 1).toFixed(1) + 'px';
+      const h     = (Math.random() * 5 + 3).toFixed(1) + 'px';
+      const rot   = (Math.random() * 40 - 20).toFixed(0) + 'deg';
       const dur   = (Math.random() * 1.8 + 1.2).toFixed(1) + 's';
       const sway  = (Math.random() * 70 - 35).toFixed(0) + 'px';
       const left  = (Math.random() * 70 + 15).toFixed(0) + '%';
       s.style.cssText =
-        `--dur:${dur};--sway:${sway};left:${left};width:${size};height:${size};background:${color};`;
+        `--dur:${dur};--sway:${sway};left:${left};width:${w};height:${h};background:${color};transform:rotate(${rot});`;
       document.body.appendChild(s);
       s.addEventListener('animationend', () => s.remove());
     }
