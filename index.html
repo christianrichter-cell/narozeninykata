@@ -34,19 +34,20 @@
     /* ── Hero side portrait (left only) ── */
     #hero-left {
       position: fixed;
-      top: 0;
+      top: 50%;
       left: 0;
-      width: 42%;
-      height: 100%;
+      transform: translateY(-50%);
+      width: 38%;
+      height: 92vh;
       z-index: 0;
       opacity: 0;
       transition: opacity 1.8s ease;
       pointer-events: none;
-      background-size: cover;
-      background-position: center top;
+      background-size: contain;
+      background-position: left center;
       background-repeat: no-repeat;
-      -webkit-mask-image: linear-gradient(to right, black 0%, black 50%, transparent 100%);
-      mask-image:         linear-gradient(to right, black 0%, black 50%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black 0%, black 55%, transparent 100%);
+      mask-image:         linear-gradient(to right, black 0%, black 55%, transparent 100%);
     }
 
     /* ── Background canvases ── */
