@@ -294,6 +294,120 @@
       object-fit: cover;
       display: block;
     }
+
+    .strip-item {
+      cursor: pointer;
+    }
+    .strip-item:hover {
+      opacity: 0.9 !important;
+    }
+
+    /* ── Person popup ── */
+    #popup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: rgba(10,10,26,0.82);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #popup-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #popup-card {
+      position: relative;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 24px;
+      padding: 44px 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      max-width: 420px;
+      width: 90%;
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.88); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    #popup-photo {
+      width: 200px;
+      height: 240px;
+      border-radius: 16px;
+      object-fit: cover;
+      object-position: center top;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    #popup-initials {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 72px;
+      font-weight: 700;
+    }
+
+    #popup-name {
+      font-size: clamp(24px, 3vw, 34px);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    #popup-celebrates {
+      font-size: 15px;
+      opacity: 0.6;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    #popup-date {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    #popup-days {
+      font-size: 14px;
+      opacity: 0.45;
+      letter-spacing: 0.1em;
+    }
+
+    #popup-close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 22px;
+      opacity: 0.4;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #fff;
+      line-height: 1;
+      transition: opacity 0.2s;
+    }
+    #popup-close:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
@@ -334,6 +448,17 @@
   </div>
 
   <div id="strip"></div>
+
+  <div id="popup-overlay">
+    <div id="popup-card">
+      <button id="popup-close">✕</button>
+      <div id="popup-media"></div>
+      <p id="popup-name"></p>
+      <p id="popup-celebrates"></p>
+      <p id="popup-date"></p>
+      <p id="popup-days"></p>
+    </div>
+  </div>
 
   <script>
     /* ── Shared state ── */
@@ -581,6 +706,8 @@
       items.forEach((p, i) => {
         const el = document.createElement('div');
         el.className = 'strip-item' + (i === 0 ? ' next' : '');
+        el.dataset.personName = p.name;
+        el.addEventListener('click', () => openPopup(p));
         const dateStr = `${p.day}.${String(p.month).padStart(2, '0')}.`;
         const avatarInner = p.photo
           ? `<img src="${p.photo}" alt="${p.name}">`
@@ -718,6 +845,46 @@
 
       setInterval(checkHour, 1000);
     })();
+
+    /* ════════════════════════════════════════
+       POPUP
+    ════════════════════════════════════════ */
+    const MONTHS_GEN = ['ledna','února','března','dubna','května','června',
+                        'července','srpna','září','října','listopadu','prosince'];
+
+    function openPopup(person) {
+      const target = nextBirthdayDate(person.day, person.month);
+      const age    = target.getFullYear() - person.birthYear;
+
+      // Media
+      const media = document.getElementById('popup-media');
+      if (person.photo) {
+        media.innerHTML = `<img id="popup-photo" src="${person.photo}" alt="${person.name}">`;
+      } else {
+        media.innerHTML = `<div id="popup-initials">${initials(person.name)}</div>`;
+      }
+
+      document.getElementById('popup-name').textContent =
+        person.name;
+      document.getElementById('popup-celebrates').textContent =
+        `slaví ${age}. narozeniny`;
+      document.getElementById('popup-date').textContent =
+        `${person.day}. ${MONTHS_GEN[person.month - 1]}`;
+      document.getElementById('popup-days').textContent =
+        daysLabel(target).toUpperCase();
+
+      document.getElementById('popup-overlay').classList.add('visible');
+    }
+
+    function closePopup() {
+      document.getElementById('popup-overlay').classList.remove('visible');
+    }
+
+    // Close on overlay click (but not card click)
+    document.getElementById('popup-overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('popup-overlay')) closePopup();
+    });
+    document.getElementById('popup-close').addEventListener('click', closePopup);
 
     /* ════════════════════════════════════════
        INIT
