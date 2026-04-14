@@ -650,7 +650,7 @@
     ════════════════════════════════════════ */
     async function init() {
       try {
-        const text = await fetch('seznam.txt').then(r => r.text());
+        const text = await fetch('Seznam.txt').then(r => r.text());
         for (const raw of text.split('\n')) {
           const line = raw.trim();
           if (!line) continue;
