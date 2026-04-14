@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Narozeniny!</title>
+  <script src="seznam.js"></script>
   <link rel="preload" href="Audio/celebration.mp3" as="audio" type="audio/mpeg">
   <link rel="preload" href="Audio/5.mp3"  as="audio" type="audio/mpeg">
   <link rel="preload" href="Audio/6.mp3"  as="audio" type="audio/mpeg">
@@ -646,35 +647,10 @@
     })();
 
     /* ════════════════════════════════════════
-       INIT — load seznam.txt
+       INIT
     ════════════════════════════════════════ */
-    async function init() {
-      try {
-        const text = await fetch('Seznam.txt').then(r => r.text());
-        for (const raw of text.split('\n')) {
-          const line = raw.trim();
-          if (!line) continue;
-          const dash = line.indexOf('-');
-          if (dash === -1) continue;
-          const name     = line.slice(0, dash).trim();
-          const datePart = line.slice(dash + 1).trim();
-          if (!datePart) continue;
-          const parts = datePart.split('.');
-          if (parts.length < 3) continue;
-          const day   = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10);
-          const year  = parseInt(parts[2], 10);
-          if (!day || !month || !year || isNaN(year)) continue;
-          allPeople.push({ name, day, month, birthYear: year });
-        }
-      } catch (e) {
-        console.error('Could not load seznam.txt', e);
-      }
-
-      if (allPeople.length === 0) {
-        document.getElementById('heading').textContent = 'Nelze načíst seznam';
-        return;
-      }
+    function init() {
+      allPeople = SEZNAM;
 
       const sorted = sortedPeople();
       setupHero(sorted[0]);
