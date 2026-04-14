@@ -31,19 +31,42 @@
       overflow: hidden;
     }
 
-    /* ── Hero background photo ── */
-    #hero-bg {
+    /* ── Hero side portrait ── */
+    #hero-photo {
       position: fixed;
-      inset: 0;
+      right: 0;
+      top: 0;
+      width: 38%;
+      height: 100%;
       z-index: 0;
-      background-size: cover;
-      background-position: center top;
-      background-repeat: no-repeat;
-      filter: blur(18px) brightness(0.22) saturate(0.7);
-      transform: scale(1.08);
       opacity: 0;
       transition: opacity 1.8s ease;
       pointer-events: none;
+    }
+
+    #hero-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+
+    /* gradient fade from left edge (dark bg) to transparent */
+    #hero-photo::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, #0a0a1a 0%, rgba(10,10,26,0.5) 45%, transparent 100%);
+      z-index: 1;
+    }
+    /* subtle bottom fade too */
+    #hero-photo::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, #0a0a1a 0%, transparent 25%);
+      z-index: 1;
     }
 
     /* ── Background canvases ── */
@@ -220,8 +243,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
-      opacity: 0.55;
+      gap: 8px;
+      opacity: 0.6;
       transition: opacity 0.6s;
     }
 
@@ -230,47 +253,48 @@
     }
 
     .strip-avatar {
-      width: 54px;
-      height: 54px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       background: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 24px;
       font-weight: 700;
       letter-spacing: 0.02em;
+      overflow: hidden;
     }
 
     .strip-item.next .strip-avatar {
-      width: 66px;
-      height: 66px;
-      font-size: 22px;
+      width: 88px;
+      height: 88px;
+      font-size: 28px;
       background: rgba(255,255,255,0.18);
-      border-color: rgba(255,255,255,0.6);
+      border: 2px solid rgba(255,255,255,0.65);
     }
 
     .strip-name {
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
       letter-spacing: 0.07em;
       text-transform: uppercase;
     }
 
     .strip-item.next .strip-name {
-      font-size: 16px;
+      font-size: 19px;
       font-weight: 600;
     }
 
     .strip-date {
-      font-size: 12px;
+      font-size: 13px;
       opacity: 0.7;
       letter-spacing: 0.04em;
     }
 
     .strip-item.next .strip-date {
-      font-size: 13px;
+      font-size: 15px;
       opacity: 0.9;
     }
 
@@ -285,7 +309,7 @@
 </head>
 <body>
 
-  <div id="hero-bg"></div>
+  <div id="hero-photo"><img id="hero-photo-img" src="" alt=""></div>
   <canvas id="stars"></canvas>
   <canvas id="fireworks"></canvas>
 
@@ -598,15 +622,18 @@
       document.getElementById('birthday-date').textContent =
         `${person.day}. ${MONTHS[person.month - 1]}`;
 
-      // Hero background photo — crossfade
-      const heroBg = document.getElementById('hero-bg');
-      heroBg.style.opacity = '0';
+      // Hero side portrait — crossfade
+      const heroPhoto    = document.getElementById('hero-photo');
+      const heroPhotoImg = document.getElementById('hero-photo-img');
+      heroPhoto.style.opacity = '0';
       setTimeout(() => {
         if (person.photo) {
-          heroBg.style.backgroundImage = `url('${person.photo}')`;
-          heroBg.style.opacity = '1';
+          heroPhotoImg.src       = person.photo;
+          heroPhotoImg.alt       = person.name;
+          heroPhoto.style.opacity = '1';
         } else {
-          heroBg.style.backgroundImage = '';
+          heroPhotoImg.src        = '';
+          heroPhoto.style.opacity = '0';
         }
       }, 500);
 
