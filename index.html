@@ -31,42 +31,31 @@
       overflow: hidden;
     }
 
-    /* ── Hero side portrait ── */
-    #hero-photo {
+    /* ── Hero side portraits ── */
+    #hero-left, #hero-right {
       position: fixed;
-      right: 0;
       top: 0;
-      width: 38%;
+      width: 36%;
       height: 100%;
       z-index: 0;
       opacity: 0;
       transition: opacity 1.8s ease;
       pointer-events: none;
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
     }
 
-    #hero-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center top;
-      display: block;
+    #hero-left {
+      left: 0;
+      -webkit-mask-image: linear-gradient(to right, black 0%, black 40%, transparent 100%);
+      mask-image:         linear-gradient(to right, black 0%, black 40%, transparent 100%);
     }
 
-    /* gradient fade from left edge (dark bg) to transparent */
-    #hero-photo::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to right, #0a0a1a 0%, rgba(10,10,26,0.5) 45%, transparent 100%);
-      z-index: 1;
-    }
-    /* subtle bottom fade too */
-    #hero-photo::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, #0a0a1a 0%, transparent 25%);
-      z-index: 1;
+    #hero-right {
+      right: 0;
+      -webkit-mask-image: linear-gradient(to left,  black 0%, black 40%, transparent 100%);
+      mask-image:         linear-gradient(to left,  black 0%, black 40%, transparent 100%);
     }
 
     /* ── Background canvases ── */
@@ -309,7 +298,8 @@
 </head>
 <body>
 
-  <div id="hero-photo"><img id="hero-photo-img" src="" alt=""></div>
+  <div id="hero-left"></div>
+  <div id="hero-right"></div>
   <canvas id="stars"></canvas>
   <canvas id="fireworks"></canvas>
 
@@ -622,20 +612,19 @@
       document.getElementById('birthday-date').textContent =
         `${person.day}. ${MONTHS[person.month - 1]}`;
 
-      // Hero side portrait — crossfade
-      const heroPhoto    = document.getElementById('hero-photo');
-      const heroPhotoImg = document.getElementById('hero-photo-img');
-      heroPhoto.style.opacity = '0';
-      setTimeout(() => {
-        if (person.photo) {
-          heroPhotoImg.src       = person.photo;
-          heroPhotoImg.alt       = person.name;
-          heroPhoto.style.opacity = '1';
-        } else {
-          heroPhotoImg.src        = '';
-          heroPhoto.style.opacity = '0';
-        }
-      }, 500);
+      // Hero side portraits — crossfade both panels
+      ['hero-left', 'hero-right'].forEach(id => {
+        const el = document.getElementById(id);
+        el.style.opacity = '0';
+        setTimeout(() => {
+          if (person.photo) {
+            el.style.backgroundImage = `url('${person.photo}')`;
+            el.style.opacity = '1';
+          } else {
+            el.style.backgroundImage = '';
+          }
+        }, 500);
+      });
 
       document.getElementById('countdown').style.display     = '';
       document.getElementById('subheading').style.display    = '';

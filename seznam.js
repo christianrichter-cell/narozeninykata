@@ -1,5 +1,5 @@
 const SEZNAM = [
-  { name: 'Tomáš V.',  day: 28, month: 10, birthYear: 2003 },
+  { name: 'Tomáš V.',  day: 28, month: 10, birthYear: 2003, photo: 'Fotky/Tomáš V..png' },
   { name: 'David',     day:  6, month:  4, birthYear: 2001 },
   { name: 'Naty',      day:  2, month:  6, birthYear: 1998, photo: 'Fotky/Naty.png' },
   { name: 'Chris',     day: 25, month:  7, birthYear: 1998, photo: 'Fotky/Chris.png' },
