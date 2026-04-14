@@ -8,7 +8,7 @@ const SEZNAM = [
   { name: 'Kyle',      day: 21, month:  9, birthYear: 2000, photo: 'Fotky/Kyle.png' },
   { name: 'Kuba',      day: 17, month:  2, birthYear: 1992, photo: 'Fotky/Kuba.png' },
   { name: 'Dominik',   day:  4, month:  4, birthYear: 1998, photo: 'Fotky/Dominik.png' },
-  { name: 'Karel',     day: 13, month:  7, birthYear: 1991 },
-  { name: 'Petr',      day: 28, month: 11, birthYear: 1991 },
-  { name: 'Kristian',  day: 18, month:  2, birthYear: 1998 },
+  { name: 'Karel',     day: 13, month:  7, birthYear: 1991, photo: 'Fotky/Karel.png' },
+  { name: 'Petr',      day: 28, month: 11, birthYear: 1991, photo: 'Fotky/Petr.png' },
+  { name: 'Kristian',  day: 18, month:  2, birthYear: 1998, photo: 'Fotky/Kristian.png' },
 ];
