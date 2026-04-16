@@ -430,6 +430,156 @@
       transition: opacity 0.2s;
     }
     #popup-close:hover { opacity: 0.9; }
+
+    /* ══════════════════════════════════════════
+       CLUSTER VIEW (multiple close birthdays)
+    ══════════════════════════════════════════ */
+    #cluster-view {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      display: none;
+    }
+
+    /* ── 2-person layout ── */
+    #cluster-view.cluster-2 {
+      display: flex;
+    }
+    .cluster-half {
+      position: relative;
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+    }
+    .cluster-half-left  { flex-direction: row; }
+    .cluster-half-right { flex-direction: row-reverse; }
+
+    .cluster-photo-wrap {
+      position: relative;
+      width: 40%;
+      flex-shrink: 0;
+    }
+    .cluster-photo-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center 40%;
+      background-repeat: no-repeat;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 7%, black 93%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 7%, black 93%, transparent 100%);
+    }
+    .cluster-half-left .cluster-photo-fade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, rgba(10,10,26,0) 45%, #0a0a1a 90%);
+    }
+    .cluster-half-right .cluster-photo-fade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to left, rgba(10,10,26,0) 45%, #0a0a1a 90%);
+    }
+    .cluster-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 22px;
+      padding: 0 2vw 160px;
+      min-width: 0;
+    }
+    .cluster-divider-2 {
+      position: absolute;
+      left: 50%;
+      top: 8%;
+      height: 84%;
+      width: 1px;
+      background: rgba(255,255,255,0.13);
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    /* ── 3-person layout ── */
+    #cluster-view.cluster-3 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 40px 4vw 160px;
+    }
+    .cluster-card-3 {
+      flex: 1;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 36px 20px;
+    }
+    .cluster-avatar-3 {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center 20%;
+      background-color: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ── Shared cluster text ── */
+    .cluster-heading {
+      font-size: clamp(11px, 1.7vw, 20px);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      line-height: 1.3;
+      background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff, #ff9ff3, #ff6b6b);
+      background-size: 300% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientFlow 5s linear infinite;
+    }
+    .cluster-subheading {
+      font-size: clamp(10px, 1.1vw, 13px);
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-top: -14px;
+    }
+    .cluster-countdown {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .cluster-countdown .tile {
+      padding: 14px 18px;
+      min-width: 76px;
+      gap: 6px;
+    }
+    .cluster-countdown .tile-number { font-size: clamp(22px, 3.2vw, 46px); }
+    .cluster-countdown .tile-sep    { font-size: 28px; margin-bottom: 16px; }
+    .cluster-date {
+      font-size: clamp(11px, 1.3vw, 16px);
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      opacity: 0.5;
+      text-transform: uppercase;
+      margin-top: -14px;
+    }
   </style>
 </head>
 <body>
@@ -469,6 +619,7 @@
     <div id="celebration"></div>
   </div>
 
+  <div id="cluster-view"></div>
   <div id="strip"></div>
 
   <div id="popup-overlay">
@@ -489,6 +640,9 @@
     let allPeople      = [];
     let currentPerson  = null;
     let celebFired     = false;
+    let displayMode    = 'solo';   // 'solo' | 'cluster'
+    let clusterPeople  = [];
+    const CLUSTER_DAYS = 14;
 
     const pad = n => String(n).padStart(2, '0');
 
@@ -744,13 +898,54 @@
     }
 
     /* ════════════════════════════════════════
-       HERO SETUP
+       CLUSTER HELPERS
     ════════════════════════════════════════ */
-    function setupHero(person) {
+    function buildClusters(people) {
+      if (!people.length) return [];
+      const groups = [];
+      let group = [people[0]];
+      for (let i = 1; i < people.length; i++) {
+        const gap = (people[i].target - people[i - 1].target) / 86400000;
+        if (gap <= CLUSTER_DAYS) group.push(people[i]);
+        else { groups.push(group); group = [people[i]]; }
+      }
+      groups.push(group);
+      return groups;
+    }
+
+    function buildDisplay() {
+      const sorted   = sortedPeople();
+      const clusters = buildClusters(sorted);
+      const first    = clusters[0];
+      const diff0    = first[0].target - Date.now();
+
+      if (first.length === 1 || diff0 <= 86400000) {
+        // Solo mode: first person as hero, everyone else in strip
+        const strip = sorted.filter(p => p.name !== first[0].name);
+        enterSoloMode(first[0], strip);
+      } else {
+        // Cluster mode
+        const names = new Set(first.map(p => p.name));
+        const strip = sorted.filter(p => !names.has(p.name));
+        enterClusterMode(first, strip);
+      }
+    }
+
+    /* ════════════════════════════════════════
+       SOLO SETUP
+    ════════════════════════════════════════ */
+    function enterSoloMode(person, stripPeople) {
+      displayMode   = 'solo';
       currentPerson = person;
       TARGET        = person.target;
       celebFired    = false;
       isLastDay     = false;
+
+      // Show solo elements, hide cluster
+      document.getElementById('cluster-view').style.display = 'none';
+      document.getElementById('hero-left').style.display    = '';
+      document.getElementById('hero-fade').style.display    = '';
+      document.getElementById('content').style.display      = '';
 
       const age = person.target.getFullYear() - person.birthYear;
       document.getElementById('heading').textContent =
@@ -761,8 +956,9 @@
                        'července','srpna','září','října','listopadu','prosince'];
       document.getElementById('birthday-date').textContent =
         `${person.day}. ${MONTHS[person.month - 1]}`;
+      document.getElementById('subheading').textContent = 'ZA:';
 
-      // Hero left portrait — crossfade
+      // Hero photo crossfade
       const heroLeft = document.getElementById('hero-left');
       heroLeft.style.opacity = '0';
       setTimeout(() => {
@@ -774,25 +970,27 @@
         }
       }, 500);
 
-      // Naty sparks
       if (person.name === 'Naty') startSparks();
       else stopSparks();
 
       document.getElementById('countdown').style.display     = '';
       document.getElementById('subheading').style.display    = '';
-      document.getElementById('subheading').textContent      = 'ZA:';
       document.getElementById('birthday-date').style.display = '';
       document.getElementById('celebration').style.display   = 'none';
-      // Ensure days tile visible on reset (tick will hide it if needed)
+      // Ensure days tile visible on reset
       const daysTile = document.getElementById('days').closest('.tile');
-      daysTile.style.display = '';
+      daysTile.style.display                    = '';
       daysTile.nextElementSibling.style.display = '';
+
+      renderStrip(stripPeople);
+      tick();
     }
 
     /* ════════════════════════════════════════
        COUNTDOWN TICK
     ════════════════════════════════════════ */
     function tick() {
+      if (displayMode !== 'solo') return;
       if (!TARGET) return;
       const diff = TARGET - Date.now();
 
@@ -838,13 +1036,7 @@
       new Audio('Audio/celebration.mp3').play().catch(() => {});
       startBalloonWindow();
 
-      // After 60 s move on to the next person
-      setTimeout(() => {
-        const sorted = sortedPeople();
-        setupHero(sorted[0]);
-        renderStrip(sorted.slice(1));
-        tick();
-      }, 60000);
+      setTimeout(() => { buildDisplay(); }, 60000);
     }
 
     /* ════════════════════════════════════════
@@ -923,6 +1115,129 @@
     }
 
     /* ════════════════════════════════════════
+       CLUSTER MODE
+    ════════════════════════════════════════ */
+    const CL_MONTHS = ['ledna','února','března','dubna','května','června',
+                       'července','srpna','září','října','listopadu','prosince'];
+
+    function enterClusterMode(people, stripPeople) {
+      displayMode   = 'cluster';
+      clusterPeople = people;
+      stopSparks();
+
+      // Hide solo elements, show cluster
+      document.getElementById('hero-left').style.display  = 'none';
+      document.getElementById('hero-fade').style.display  = 'none';
+      document.getElementById('content').style.display    = 'none';
+
+      const cv = document.getElementById('cluster-view');
+      cv.className = people.length >= 3 ? 'cluster-3' : 'cluster-2';
+      cv.innerHTML = people.length >= 3
+        ? buildCluster3HTML(people)
+        : buildCluster2HTML(people);
+      cv.style.display = '';
+
+      renderStrip(stripPeople);
+      tickCluster();
+    }
+
+    function buildCluster2HTML(people) {
+      function half(p, i, side) {
+        const age  = p.target.getFullYear() - p.birthYear;
+        const date = `${p.day}. ${CL_MONTHS[p.month - 1]}`;
+        const bg   = p.photo ? `style="background-image:url('${p.photo}')"` : '';
+        return `
+          <div class="cluster-half cluster-half-${side}">
+            <div class="cluster-photo-wrap">
+              <div class="cluster-photo-bg" ${bg}></div>
+              <div class="cluster-photo-fade"></div>
+            </div>
+            <div class="cluster-info">
+              <p class="cluster-heading">${p.name} bude slavit své ${age}. narozeniny!</p>
+              <p class="cluster-subheading" id="csub-${i}">ZA:</p>
+              <div class="cluster-countdown">
+                <div class="tile"><span class="tile-number" id="cd-${i}">00</span><span class="tile-label">Dní</span></div>
+                <span class="tile-sep">:</span>
+                <div class="tile"><span class="tile-number" id="ch-${i}">00</span><span class="tile-label">Hodin</span></div>
+                <span class="tile-sep">:</span>
+                <div class="tile"><span class="tile-number" id="cm-${i}">00</span><span class="tile-label">Minut</span></div>
+                <span class="tile-sep">:</span>
+                <div class="tile"><span class="tile-number" id="cs-${i}">00</span><span class="tile-label">Sekund</span></div>
+              </div>
+              <p class="cluster-date">${date}</p>
+            </div>
+          </div>`;
+      }
+      return half(people[0], 0, 'left') +
+             '<div class="cluster-divider-2"></div>' +
+             half(people[1], 1, 'right');
+    }
+
+    function buildCluster3HTML(people) {
+      return people.map((p, i) => {
+        const age      = p.target.getFullYear() - p.birthYear;
+        const date     = `${p.day}. ${CL_MONTHS[p.month - 1]}`;
+        const bgStyle  = p.photo ? `background-image:url('${p.photo}')` : '';
+        const initStr  = p.photo ? '' : initials(p.name);
+        return `
+          <div class="cluster-card-3">
+            <div class="cluster-avatar-3" style="${bgStyle}">${initStr}</div>
+            <p class="cluster-heading">${p.name} bude slavit své ${age}. narozeniny!</p>
+            <p class="cluster-subheading" id="csub-${i}">ZA:</p>
+            <div class="cluster-countdown">
+              <div class="tile"><span class="tile-number" id="cd-${i}">00</span><span class="tile-label">Dní</span></div>
+              <span class="tile-sep">:</span>
+              <div class="tile"><span class="tile-number" id="ch-${i}">00</span><span class="tile-label">Hodin</span></div>
+              <span class="tile-sep">:</span>
+              <div class="tile"><span class="tile-number" id="cm-${i}">00</span><span class="tile-label">Minut</span></div>
+              <span class="tile-sep">:</span>
+              <div class="tile"><span class="tile-number" id="cs-${i}">00</span><span class="tile-label">Sekund</span></div>
+            </div>
+            <p class="cluster-date">${date}</p>
+          </div>`;
+      }).join('');
+    }
+
+    function tickCluster() {
+      if (displayMode !== 'cluster') return;
+      const now   = Date.now();
+      const diffs = clusterPeople.map(p => p.target - now);
+
+      // First person within 24h → hard cut to solo
+      if (diffs[0] <= 86400000) {
+        buildDisplay();
+        return;
+      }
+
+      clusterPeople.forEach((p, i) => {
+        const diff = diffs[i];
+        if (diff <= 0) return;
+        const totalSec = Math.floor(diff / 1000);
+        const daysLeft = Math.floor(totalSec / 86400);
+
+        const subEl = document.getElementById(`csub-${i}`);
+        if (subEl) subEl.textContent = diff <= 86400000 ? 'UŽ JEN ZA:' : 'ZA:';
+
+        const dEl = document.getElementById(`cd-${i}`);
+        if (dEl) {
+          const tile = dEl.closest('.tile');
+          const sep  = tile.nextElementSibling;
+          tile.style.display               = daysLeft > 0 ? '' : 'none';
+          if (sep) sep.style.display       = daysLeft > 0 ? '' : 'none';
+          dEl.textContent = pad(daysLeft);
+        }
+        const hEl = document.getElementById(`ch-${i}`);
+        const mEl = document.getElementById(`cm-${i}`);
+        const sEl = document.getElementById(`cs-${i}`);
+        if (hEl) hEl.textContent = pad(Math.floor(totalSec / 3600) % 24);
+        if (mEl) mEl.textContent = pad(Math.floor(totalSec / 60) % 60);
+        if (sEl) sEl.textContent = pad(totalSec % 60);
+      });
+
+      setTimeout(tickCluster, 1000 - (Date.now() % 1000) + 5);
+    }
+
+    /* ════════════════════════════════════════
        POPUP
     ════════════════════════════════════════ */
     const MONTHS_GEN = ['ledna','února','března','dubna','května','června',
@@ -974,11 +1289,7 @@
     ════════════════════════════════════════ */
     function init() {
       allPeople = SEZNAM;
-
-      const sorted = sortedPeople();
-      setupHero(sorted[0]);
-      renderStrip(sorted.slice(1));
-      tick();
+      buildDisplay();
     }
 
     init();
