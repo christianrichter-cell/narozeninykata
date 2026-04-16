@@ -441,7 +441,7 @@
 
   <div id="content">
     <p id="heading"></p>
-    <p id="subheading">UŽ JEN ZA:</p>
+    <p id="subheading">ZA:</p>
 
     <div id="countdown">
       <div class="tile">
@@ -754,7 +754,7 @@
 
       const age = person.target.getFullYear() - person.birthYear;
       document.getElementById('heading').textContent =
-        `${person.name} slaví ${age}. narozeniny!`;
+        `${person.name} bude slavit své ${age}. narozeniny!`;
       document.title = `${person.name} má narozeniny!`;
 
       const MONTHS = ['ledna','února','března','dubna','května','června',
@@ -780,8 +780,13 @@
 
       document.getElementById('countdown').style.display     = '';
       document.getElementById('subheading').style.display    = '';
+      document.getElementById('subheading').textContent      = 'ZA:';
       document.getElementById('birthday-date').style.display = '';
       document.getElementById('celebration').style.display   = 'none';
+      // Ensure days tile visible on reset (tick will hide it if needed)
+      const daysTile = document.getElementById('days').closest('.tile');
+      daysTile.style.display = '';
+      daysTile.nextElementSibling.style.display = '';
     }
 
     /* ════════════════════════════════════════
@@ -799,7 +804,19 @@
       isLastDay = diff <= 86400000;
 
       const totalSec = Math.floor(diff / 1000);
-      document.getElementById('days').textContent    = pad(Math.floor(totalSec / 86400));
+      const daysLeft = Math.floor(totalSec / 86400);
+
+      // Subheading: "UŽ JEN ZA:" in last 24h, "ZA:" otherwise
+      document.getElementById('subheading').textContent = isLastDay ? 'UŽ JEN ZA:' : 'ZA:';
+
+      // Hide days tile (+ its separator) when days = 0
+      const daysTile = document.getElementById('days').closest('.tile');
+      const daysSep  = daysTile.nextElementSibling; // the ":" separator
+      const showDays = daysLeft > 0;
+      daysTile.style.display = showDays ? '' : 'none';
+      daysSep.style.display  = showDays ? '' : 'none';
+
+      document.getElementById('days').textContent    = pad(daysLeft);
       document.getElementById('hours').textContent   = pad(Math.floor(totalSec / 3600) % 24);
       document.getElementById('minutes').textContent = pad(Math.floor(totalSec / 60) % 60);
       document.getElementById('seconds').textContent = pad(totalSec % 60);
