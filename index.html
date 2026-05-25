@@ -665,6 +665,9 @@
 
     const pad = n => String(n).padStart(2, '0');
 
+    const DAYS_CZ = ['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
+    function dayOfWeekCZ(date) { return DAYS_CZ[date.getDay()]; }
+
     /* ════════════════════════════════════════
        STARFIELD
     ════════════════════════════════════════ */
@@ -974,7 +977,7 @@
       const MONTHS = ['ledna','února','března','dubna','května','června',
                        'července','srpna','září','října','listopadu','prosince'];
       document.getElementById('birthday-date').textContent =
-        `${person.day}. ${MONTHS[person.month - 1]}`;
+        `${person.day}. ${MONTHS[person.month - 1]} · ${dayOfWeekCZ(person.target)}`;
       document.getElementById('subheading').textContent = 'ZA:';
 
       // Hero photo crossfade
@@ -1163,7 +1166,7 @@
     function buildCluster2HTML(people) {
       function half(p, i, side) {
         const age  = p.target.getFullYear() - p.birthYear;
-        const date = `${p.day}. ${CL_MONTHS[p.month - 1]}`;
+        const date = `${p.day}. ${CL_MONTHS[p.month - 1]} · ${dayOfWeekCZ(p.target)}`;
         const bg   = p.photo ? `style="background-image:url('${p.photo}')"` : '';
         return `
           <div class="cluster-half cluster-half-${side}">
@@ -1195,7 +1198,7 @@
     function buildCluster3HTML(people) {
       return people.map((p, i) => {
         const age      = p.target.getFullYear() - p.birthYear;
-        const date     = `${p.day}. ${CL_MONTHS[p.month - 1]}`;
+        const date     = `${p.day}. ${CL_MONTHS[p.month - 1]} · ${dayOfWeekCZ(p.target)}`;
         const bgStyle  = p.photo ? `background-image:url('${p.photo}')` : '';
         const initStr  = p.photo ? '' : initials(p.name);
         return `
