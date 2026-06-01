@@ -1064,9 +1064,40 @@
       cel.style.display  = 'block';
       new Audio('Audio/celebration.mp3').play().catch(() => {});
       startBalloonWindow();
-
-      setTimeout(() => { buildDisplay(); }, 60000);
     }
+
+    /* ════════════════════════════════════════
+       BIRTHDAY DAY — gentle balloon trickle all day
+    ════════════════════════════════════════ */
+    (function () {
+      function scheduleTrickle() {
+        if (!celebFired) { setTimeout(scheduleTrickle, 5000); return; }
+        spawnBalloon();
+        setTimeout(scheduleTrickle, Math.random() * 20000 + 10000);
+      }
+      scheduleTrickle();
+    })();
+
+    /* ════════════════════════════════════════
+       BIRTHDAY DAY — celebration every 2 h, advance at midnight
+    ════════════════════════════════════════ */
+    (function () {
+      let lastCelebHour = -1;
+      setInterval(() => {
+        if (!celebFired || !TARGET) return;
+
+        const now = Date.now();
+        if (now >= TARGET + 86400000) { buildDisplay(); return; }
+
+        const currentHour = new Date(now).getHours();
+        if (lastCelebHour === -1) { lastCelebHour = currentHour; return; }
+        if (currentHour % 2 === 0 && currentHour !== lastCelebHour) {
+          lastCelebHour = currentHour;
+          new Audio('Audio/celebration.mp3').play().catch(() => {});
+          startBalloonWindow();
+        }
+      }, 1000);
+    })();
 
     /* ════════════════════════════════════════
        HOURLY ANNOUNCEMENT (last 24 h only)
@@ -1075,18 +1106,30 @@
       const AVAILABLE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
       let lastTriggeredHour = null;
 
+      const preloaded = {};
+      AVAILABLE.forEach(h => {
+        const a = new Audio(`Audio/${h}.mp3`);
+        a.preload = 'auto';
+        preloaded[h] = a;
+      });
+      const preloadedCel = new Audio('Audio/celebration.mp3');
+      preloadedCel.preload = 'auto';
+
       function playSequence(hoursLeft) {
         let played = false;
         function playHour() {
           if (played) return; played = true;
           setTimeout(() => {
-            if (AVAILABLE.includes(hoursLeft))
-              new Audio(`Audio/${hoursLeft}.mp3`).play().catch(() => {});
+            if (AVAILABLE.includes(hoursLeft)) {
+              preloaded[hoursLeft].currentTime = 0;
+              preloaded[hoursLeft].play().catch(() => {});
+            }
           }, 3000);
         }
-        const cel = new Audio('Audio/celebration.mp3');
-        cel.addEventListener('ended', playHour);
-        cel.addEventListener('error', playHour);
+        const cel = preloadedCel;
+        cel.currentTime = 0;
+        cel.addEventListener('ended', playHour, { once: true });
+        cel.addEventListener('error', playHour, { once: true });
         cel.play().catch(playHour);
         setTimeout(playHour, 45000);
       }
