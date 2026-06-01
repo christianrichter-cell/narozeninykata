@@ -171,7 +171,9 @@
       border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
       z-index: 7;
       pointer-events: none;
-      animation: floatUp var(--dur) ease-in forwards;
+      animation: balloonRise var(--dur) linear forwards,
+                 balloonSway var(--sway-dur) ease-in-out infinite alternate;
+      animation-composition: replace, accumulate;
     }
     .balloon::before {
       content: '';
@@ -194,11 +196,14 @@
       background: rgba(255,255,255,0.35);
     }
 
-    @keyframes floatUp {
-      0%   { transform: translateY(0)      translateX(0);    opacity: 1; }
-      40%  { opacity: 1; }
-      70%  { transform: translateY(-80vh)  translateX(var(--sway)); }
-      100% { transform: translateY(-115vh) translateX(0);    opacity: 0; }
+    @keyframes balloonRise {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-130vh); }
+    }
+
+    @keyframes balloonSway {
+      from { transform: translateX(calc(var(--sway) * -1)); }
+      to   { transform: translateX(var(--sway)); }
     }
 
     /* ── Celebration message ── */
@@ -855,12 +860,13 @@
       const b = document.createElement('div');
       b.className = 'balloon';
       const color = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
-      const dur  = (Math.random() * 3 + 5).toFixed(1) + 's';
-      const sway = (Math.random() * 80 - 40).toFixed(0) + 'px';
-      const left = (Math.random() * 80 + 10).toFixed(0) + '%';
-      b.style.cssText = `--color:${color};--dur:${dur};--sway:${sway};left:${left};background:${color};`;
+      const dur     = (Math.random() * 5 + 7).toFixed(1) + 's';
+      const sway    = (Math.random() * 40 + 15).toFixed(0) + 'px';
+      const swayDur = (Math.random() * 2 + 2).toFixed(1) + 's';
+      const left    = (Math.random() * 80 + 10).toFixed(0) + '%';
+      b.style.cssText = `--color:${color};--dur:${dur};--sway:${sway};--sway-dur:${swayDur};left:${left};background:${color};`;
       document.body.appendChild(b);
-      b.addEventListener('animationend', () => b.remove());
+      b.addEventListener('animationend', e => { if (e.animationName === 'balloonRise') b.remove(); });
     }
 
     function startBalloonWindow() {
