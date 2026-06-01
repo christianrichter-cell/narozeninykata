@@ -6,6 +6,10 @@
   <title>Narozeniny!</title>
   <script src="seznam.js"></script>
   <link rel="preload" href="Audio/celebration.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/1.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/2.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/3.mp3"  as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/4.mp3"  as="audio" type="audio/mpeg">
   <link rel="preload" href="Audio/5.mp3"  as="audio" type="audio/mpeg">
   <link rel="preload" href="Audio/6.mp3"  as="audio" type="audio/mpeg">
   <link rel="preload" href="Audio/7.mp3"  as="audio" type="audio/mpeg">
@@ -15,6 +19,9 @@
   <link rel="preload" href="Audio/11.mp3" as="audio" type="audio/mpeg">
   <link rel="preload" href="Audio/12.mp3" as="audio" type="audio/mpeg">
   <link rel="preload" href="Audio/13.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/14.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/15.mp3" as="audio" type="audio/mpeg">
+  <link rel="preload" href="Audio/16.mp3" as="audio" type="audio/mpeg">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1065,7 +1072,7 @@
        HOURLY ANNOUNCEMENT (last 24 h only)
     ════════════════════════════════════════ */
     (function () {
-      const AVAILABLE = [5, 6, 7, 8, 9, 10, 11, 12, 13];
+      const AVAILABLE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
       let lastTriggeredHour = null;
 
       function playSequence(hoursLeft) {
