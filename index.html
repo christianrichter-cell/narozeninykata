@@ -611,6 +611,70 @@
       text-transform: uppercase;
       margin-top: -14px;
     }
+
+    /* ── Birthday day: vertically center the celebration text ── */
+    #content.birthday-mode {
+      padding-bottom: 0;
+    }
+
+    /* ── Play button ── */
+    #play-btn {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      outline: none;
+    }
+
+    #play-btn-circle {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 215, 0, 0.45);
+      background: rgba(255, 215, 0, 0.07);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      color: #ffd700;
+      padding-left: 5px;
+      transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+      animation: playGlow 2.8s ease-in-out infinite;
+    }
+
+    @keyframes playGlow {
+      0%, 100% { box-shadow: 0 0 18px rgba(255,215,0,0.2), 0 0 40px rgba(255,215,0,0.08); }
+      50%       { box-shadow: 0 0 32px rgba(255,215,0,0.5), 0 0 70px rgba(255,215,0,0.18); }
+    }
+
+    #play-btn:hover #play-btn-circle {
+      transform: scale(1.12);
+      background: rgba(255, 215, 0, 0.16);
+      border-color: rgba(255, 215, 0, 0.8);
+    }
+
+    #play-btn-label {
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      color: #fff;
+      transition: opacity 0.25s;
+    }
+
+    #play-btn:hover #play-btn-label { opacity: 0.75; }
+
+    #play-btn.playing #play-btn-circle {
+      animation: playGlow 0.7s ease-in-out infinite;
+      border-color: rgba(255, 140, 50, 0.7);
+      background: rgba(255, 140, 50, 0.1);
+      color: #ff9632;
+      padding-left: 0;
+    }
   </style>
 </head>
 <body>
@@ -648,6 +712,10 @@
 
     <p id="birthday-date"></p>
     <div id="celebration"></div>
+    <button id="play-btn">
+      <div id="play-btn-circle">▶</div>
+      <span id="play-btn-label">Přehrát oslavu</span>
+    </button>
   </div>
 
   <div id="cluster-view"></div>
@@ -1012,6 +1080,9 @@
       document.getElementById('subheading').style.display    = '';
       document.getElementById('birthday-date').style.display = '';
       document.getElementById('celebration').style.display   = 'none';
+      document.getElementById('heading').style.display       = '';
+      document.getElementById('content').classList.remove('birthday-mode');
+      document.getElementById('play-btn').style.display      = 'none';
       // Ensure days tile visible on reset
       const daysTile = document.getElementById('days').closest('.tile');
       daysTile.style.display                    = '';
@@ -1065,9 +1136,12 @@
       document.getElementById('countdown').style.display      = 'none';
       document.getElementById('subheading').style.display     = 'none';
       document.getElementById('birthday-date').style.display  = 'none';
+      document.getElementById('heading').style.display        = 'none';
+      document.getElementById('content').classList.add('birthday-mode');
       const cel = document.getElementById('celebration');
       cel.textContent    = `🎉 ${currentPerson.name} slaví narozeniny! 🎉`;
       cel.style.display  = 'block';
+      document.getElementById('play-btn').style.display = 'flex';
       new Audio('Audio/celebration.mp3').play().catch(() => {});
       startBalloonWindow();
     }
@@ -1361,6 +1435,40 @@
     });
     document.getElementById('popup-close').addEventListener('click', closePopup);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+
+    /* ════════════════════════════════════════
+       PLAY BUTTON
+    ════════════════════════════════════════ */
+    (function () {
+      let celebAudio = null;
+      const btn = document.getElementById('play-btn');
+      const circle = document.getElementById('play-btn-circle');
+      btn.addEventListener('click', () => {
+        if (celebAudio && !celebAudio.ended && !celebAudio.paused) {
+          celebAudio.pause();
+          celebAudio.currentTime = 0;
+          btn.classList.remove('playing');
+          circle.textContent = '▶';
+          return;
+        }
+        celebAudio = new Audio('Audio/celebration.mp3');
+        btn.classList.add('playing');
+        circle.textContent = '■';
+        celebAudio.addEventListener('ended', () => {
+          btn.classList.remove('playing');
+          circle.textContent = '▶';
+        });
+        celebAudio.addEventListener('error', () => {
+          btn.classList.remove('playing');
+          circle.textContent = '▶';
+        });
+        celebAudio.play().catch(() => {
+          btn.classList.remove('playing');
+          circle.textContent = '▶';
+        });
+        startBalloonWindow();
+      });
+    })();
 
     /* ════════════════════════════════════════
        INIT
